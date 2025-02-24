@@ -1,13 +1,14 @@
 import torch
-from model import Generator, nd
+from model import Generator, ND, NA
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 nz = 100  # length of noise
-na = 3
+na = NA
+nd = ND
 
 netG = Generator(nz).to(device)
 
-netG.load_state_dict(torch.load('nets/dcgan_netG_more_activities.pkl', weights_only=True))
+netG.load_state_dict(torch.load('models/cdc-gan.pkl', weights_only=True))
 netG.to(device)
 netG.eval()
 
