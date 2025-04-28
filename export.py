@@ -8,7 +8,7 @@ nd = ND
 
 netG = Generator(nz).to(device)
 
-netG.load_state_dict(torch.load('models/cdc-gan.pkl', weights_only=True))
+netG.load_state_dict(torch.load('models/cdc-gan_4-act.pkl', weights_only=True))
 netG.to(device)
 netG.eval()
 
@@ -24,7 +24,7 @@ dummy_input = torch.cat([dummy_noise, dummy_labels], 1)
 torch.onnx.export(
     netG,
     (dummy_noise, dummy_labels),
-    "gan_activities.onnx",
+    "models/cdc-gan_4-act.onnx",
     input_names=['noise', 'labels'],
     output_names=['output'],
     dynamic_axes={'noise': {0: 'batch_size', 2: 'sequence_length'},

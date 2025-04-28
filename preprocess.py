@@ -1,6 +1,11 @@
 import h5py
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
+import sys
+from tqdm import tqdm
+
+data_dict = {}
 
 def remove_extra(data_frame):
     if 'x.$numberDouble' in data_frame:
@@ -10,7 +15,83 @@ def remove_extra(data_frame):
     if 'z.$numberDouble' in data_frame:
         data_frame.drop('z.$numberDouble', axis=1, inplace=True)
 
-def preprocess():
+def json_process(directory_path):
+    files = os.listdir(directory_path)
+
+    j = 0
+
+    with h5py.File('data/preprocessed/test.h5', 'w') as hf:
+        pass
+
+    total = 0
+
+    loop = tqdm(files, total=len(files), leave=False)
+    for file in loop:
+        if file.endswith('.json'):
+            current_directory = os.getcwd()
+            file_path = os.path.join(current_directory, directory_path, file)
+            df = pd.read_json(file_path)
+            activity = df['activity'].values[0]
+
+            loop.set_description(f"Processing {activity}")
+
+            df.drop(columns=['activity'], inplace=True)
+            df.drop(columns=['elapsedTime'], inplace=True)
+            df.drop(columns=['uid'], inplace=True)
+
+            df = df.reset_index().rename(columns={'index': 'sensor'})
+            
+            df_exploded = df.explode('sensorData').reset_index(drop=True)
+
+            df_normalized = pd.concat([
+                df_exploded['sensor'],
+                pd.json_normalize(df_exploded['sensorData'])
+            ], axis=1)
+
+            df_normalized.drop(columns=['t'], inplace=True)
+
+            df_normalized['row'] = df_normalized.groupby('sensor').cumcount()
+
+
+            df_pivot = df_normalized.pivot(index='row', columns='sensor', values=['x', 'y', 'z'])
+
+            df_pivot.columns = [f'{coord}_{sensor}' for coord, sensor in df_pivot.columns]
+            df_pivot = df_pivot.reset_index(drop=True)
+
+            sorted_columns = ["x_accelerometer", "y_accelerometer", "z_accelerometer", 
+                              "x_gyroscope", "y_gyroscope", "z_gyroscope",
+                              "x_magnetometer", "y_magnetometer", "z_magnetometer",
+                              "x_absOrientation", "y_absOrientation", "z_absOrientation",
+                              "x_relOrientation", "y_relOrientation", "z_relOrientation"]
+
+            df_pivot = df_pivot.reindex(columns=sorted_columns)
+            
+            num_rows = df_pivot.shape[0]
+            num_splits = (num_rows - 90 )// 10
+            with h5py.File('data/preprocessed/test.h5', 'a') as hf:
+                for i in range(num_splits):
+                        start_row = i * 10
+                        if df_pivot.iloc[i * 10].isnull().any():
+                            continue
+                        end_row = i* 10 + 100
+                        df_split = df_pivot.iloc[start_row:end_row]
+                    
+                        dataset_name = f'{activity}_{j}_{i}'
+                        hf.create_dataset(dataset_name, data=df_split.values)
+                        hf[dataset_name].attrs['activity'] = activity
+                        total += 1
+                        loop.set_postfix(total=total)
+
+            if activity not in data_dict:
+                data_dict[activity] = num_splits
+            else:
+                data_dict[activity] += num_splits
+
+            j += 1
+
+            
+            
+def h5_process():
     json_file_path = 'data/raw/mobile-sensor-reading_acce_gyro_magnet.json'
     print(f"Reading JSON file: {json_file_path}")
     df = pd.read_json(json_file_path)
@@ -109,5 +190,5 @@ def preprocess():
     print("Data extraction complete.")
 
 if __name__ == '__main__':
-    preprocess()
-    
+    json_process('data/mstraka/api_data')
+    print(data_dict)

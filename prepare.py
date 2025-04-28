@@ -9,7 +9,6 @@ class Dataset():
         self.activities = activities
         self.dataset, self.labels = self.load_file(root, activities)
         self.length = self.dataset.shape[0]
-        self.minmax_normalize()
 
     def __len__(self):
         return self.length
@@ -39,6 +38,9 @@ class Dataset():
 
                 data.append(dataset[:])
                 labels.append(activities[label])
+
+        min_length = 100
+        data = [sample[:min_length, :] for sample in data if sample.shape[0] >= min_length]
 
         data = np.nan_to_num(data)
 

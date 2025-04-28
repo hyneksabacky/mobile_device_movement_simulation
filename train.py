@@ -4,23 +4,25 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import sys
+import seaborn as sns
 
 from model import Discriminator, Generator, weights_init
 from prepare import Dataset
 
 lr = 2e-4
 beta1 = 0.5
-epoch_num = 128
+epoch_num = 4 #128
 batch_size = 128
 nz = 100
 ngpu = 0
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-nd = 6
+nd = 15
 
-activities = {'"walk"' : 0, '"sit"' : 1, '"car"' : 2}
+activities = {'walk' : 0, 'sit' : 1, 'car' : 2, 'ontable' : 3}
 
 def main():
-    trainset = Dataset('./data/preprocessed/data_xyz.h5', activities)
+    print("Loading dataset...")
+    trainset = Dataset('./data/preprocessed/marek_xyz.h5', activities)
 
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=batch_size, shuffle=True
@@ -34,11 +36,11 @@ def main():
 
     criterion = nn.BCELoss()
 
-    real_label = 1.
+    real_label = 0.9
     fake_label = 0.
 
-    optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
-    optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=lr/2, betas=(beta1, 0.999))
+    optimizerG = optim.Adam(netG.parameters(), lr=lr*32, betas=(beta1, 0.999))
 
     G_losses = []
     D_losses = []
@@ -80,16 +82,41 @@ def main():
             G_losses.append(errG.item())
             D_losses.append(errD.item())
 
-    plt.figure(figsize=(10,5))
-    plt.title("Generator and Discriminator Loss During Training")
-    plt.plot(G_losses,label="G")
-    plt.plot(D_losses,label="D")
-    plt.xlabel("Iterations")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.show()
 
-    torch.save(netG.state_dict(), './models/cdc-gan.pkl')
+    num_iterations = len(D_losses)
+    iterations_per_epoch = num_iterations // epoch_num
+    epochs = [i / iterations_per_epoch for i in range(num_iterations)]
+
+    fig, ax1 = plt.subplots(figsize=(10,5))
+
+    # Primary X-axis: Iterations
+    ax1.set_title("Generator and Discriminator Loss During Training")
+    ax1.plot(D_losses, label="Discriminator")
+    ax1.plot(G_losses, label="Generator")
+    ax1.set_xlabel("Iterations")
+    ax1.set_ylabel("Loss")
+    ax1.legend(loc='upper right')
+
+    def iterations_to_epochs(x):
+        return x / iterations_per_epoch
+
+    def epochs_to_iterations(x):
+        return x * iterations_per_epoch
+
+    ax2 = ax1.secondary_xaxis('top', functions=(iterations_to_epochs, epochs_to_iterations))
+    ticks_with_end = [x for x in range(0, epoch_num, 4)]
+    ticks_with_end.append(epoch_num)
+    print(ticks_with_end)
+
+    ax2.set_xticks(ticks_with_end)
+    ax2.set_xlabel("Epochs")
+
+    for i in range(0, num_iterations + iterations_per_epoch, iterations_per_epoch):
+        plt.axvline(x=i, color='gray', linestyle='--', linewidth=0.5)
+
+    plt.tight_layout()
+    plt.show()
+    torch.save(netG.state_dict(), './models/cdc-gan_4-act.pkl')
     torch.save(netD, './models/dcgan_netD.pkl')
 
 if __name__ == '__main__':
