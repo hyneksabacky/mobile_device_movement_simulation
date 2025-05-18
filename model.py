@@ -1,11 +1,14 @@
 import torch.nn as nn
 import torch
-import sys
 
+# Number of data channels (features) and activity classes
 ND = 15
-NA = 4
+NA = 1
 
 def weights_init(m):
+    """
+    Custom weight initialization for Conv and BatchNorm layers.
+    """
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
@@ -13,21 +16,24 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
-
 class Discriminator(nn.Module):
+    """
+    Discriminator network for 1D data.
+    Takes input data and activity label, outputs probability of being real.
+    """
     def __init__(self, nd=ND, na=NA):
         super().__init__()
         self.main = nn.Sequential(
             nn.Conv1d(nd + na, 64, kernel_size=4, stride=2, padding=1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.Conv1d(64, 128, kernel_size=4, stride=2, padding=1, bias=False),
             nn.BatchNorm1d(128),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv1d(128, 256, kernel_size=4, stride=2, padding=1, bias=False),
             nn.BatchNorm1d(256),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.Conv1d(256, 512, kernel_size=4, stride=2, padding=1, bias=False),
             nn.BatchNorm1d(512),
             nn.LeakyReLU(0.2, inplace=True),
@@ -35,30 +41,26 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
-    # def forward(self, x, y):
-    #     print("DISCRIMINATOR FORWARD PASS")
-    #     print(f"Input x shape: {x.shape}")  # Debug input shape
-    #     print(f"Input y shape: {y.shape}")  # Debug label shape
-
-    #     y = y.view(y.size(0), y.size(1), 1).expand(-1, -1, x.size(2))  # Expand labels to match input size
-    #     print(f"Expanded y shape: {y.shape}")  # Debug expanded label shape
-
-    #     x = torch.cat([x, y], 1)  # Concatenate input and labels along the channel dimension
-    #     print(f"Concatenated x shape: {x.shape}")  # Debug concatenated input shape
-
-    #     for i, layer in enumerate(self.main):
-    #         x = layer(x)
-    #         print(f"After layer {i} ({layer.__class__.__name__}): {x.shape}")  # Debug shape after each layer
-
-    #     return x
     def forward(self, x, y):
+        """
+        Forward pass for the Discriminator.
+        Args:
+            x (Tensor): Input data of shape (batch, channels, timesteps)
+            y (Tensor): One-hot activity labels of shape (batch, na)
+        Returns:
+            Tensor: Probability output
+        """
+        # Expand label to match time dimension and concatenate to input
         y = y.view(y.size(0), y.size(1), 1).expand(-1, -1, x.size(2))
         x = torch.cat([x, y], 1)
         x = self.main(x)
         return x
 
-
 class Generator(nn.Module):
+    """
+    Generator network for 1D data.
+    Takes noise and activity label, outputs generated data.
+    """
     def __init__(self, nz, nd=ND, na=NA):
         super().__init__()
         self.main = nn.Sequential(
@@ -77,22 +79,16 @@ class Generator(nn.Module):
             nn.ConvTranspose1d(64, nd, kernel_size=16, stride=2, padding=1, bias=False),
         )
 
-    # def forward(self, x, y):
-    #     print("GENERATOR FORWARD PASS")
-    #     print(f"Input x shape: {x.shape}")
-    #     print(f"Input y shape: {y.shape}")
-
-    #     y = y.view(y.size(0), y.size(1), 1).expand(-1, -1, x.size(2))
-    #     print(f"Expanded y shape: {y.shape}")
-    #     x = torch.cat([x, y], 1)
-    #     print(f"Concatenated x shape: {x.shape}")
-    #     for i, layer in enumerate(self.main):
-    #         x = layer(x)
-    #         print(f"After layer {i} ({layer.__class__.__name__}): {x.shape}")  # Debug shape after each layer
-
-    #     # sys.exit(0)
-    #     return x
     def forward(self, x, y):
+        """
+        Forward pass for the Generator.
+        Args:
+            x (Tensor): Noise input of shape (batch, nz, 1)
+            y (Tensor): One-hot activity labels of shape (batch, na)
+        Returns:
+            Tensor: Generated data of shape (batch, nd, timesteps)
+        """
+        # Expand label to match time dimension and concatenate to noise
         y = y.view(y.size(0), y.size(1), 1).expand(-1, -1, x.size(2))
         x = torch.cat([x, y], 1)
         x = self.main(x)

@@ -1,28 +1,37 @@
 import torch
 import matplotlib.pyplot as plt
 from model import Generator
+import json
 
-# seed = 420
+# Latent vector size and number of data channels
 nz = 100
 nd = 15
 
 device = torch.device("cpu")
 
-activities = {'walk' : 0, 'sit' : 1, 'car' : 2, 'ontable' : 3}
+# Activity label mapping
+activities = {'walk': 0}
 
+# Initialize and load the trained Generator model
 netG = Generator(nz)
-netG.load_state_dict(torch.load('./models/cdc-gan_4-act.pkl', weights_only=True))
+netG.load_state_dict(torch.load('./models/cdc-gan_walk_big_nz.pkl', weights_only=True))
 netG.eval()
 
-for seed in range(100):
+# Generate synthetic data for each activity
+for seed in range(1):
+    # Generate a random seed for reproducibility
+    seed = torch.randint(0, 10000, (1,)).item()
+    print(f"Seed: {seed}")
     for key in activities.keys():
         torch.manual_seed(seed)
         fixed_noise = torch.randn(1, nz, 1, device=device)
-        one_hot_label = torch.zeros(1, 4, device=device)
+        one_hot_label = torch.zeros(1, len(activities.keys()), device=device)
         one_hot_label[0, activities[key]] = 1
 
+        # Generate fake data using the Generator
         fake = netG(fixed_noise, one_hot_label).detach().cpu()
 
+        # Split generated data into sensor channels
         accel = fake[0][:3]
         gyro = fake[0][3:6]
         mag = fake[0][6:9]
@@ -31,51 +40,45 @@ for seed in range(100):
 
         print(accel.shape)
 
-        # # save as json
-        import json
-
+        # Prepare data in JSON format
         fake_data = {
             "activity": f"{key}",
-            "uid" : "",
-            "elapsedTime" : 5000,
-            "sensorData" : {
-                "accelerometer" : [{
-                    "t" : i * 50,
-                    "x" : accel[0][i].item(),
-                    "y" : accel[1][i].item(),
-                    "z" : accel[2][i].item()
-                }
-                for i in range(100)],
-                "gyroscope" : [{
-                    "t" : i * 50,
-                    "x" : gyro[0][i].item(),
-                    "y" : gyro[1][i].item(),
-                    "z" : gyro[2][i].item()
-                }
-                for i in range(100)],
-                "magnetometer" : [{
-                    "t" : i * 50,
-                    "x" : mag[0][i].item(),
-                    "y" : mag[1][i].item(),
-                    "z" : mag[2][i].item()
-                }
-                for i in range(100)],
-                "absOrientation" : [{
-                    "t" : i * 50,
-                    "x" : absOri[0][i].item(),
-                    "y" : absOri[1][i].item(),
-                    "z" : absOri[2][i].item()
-                }
-                for i in range(100)],
-                "relOrientation" : [{
-                    "t" : i * 50,
-                    "x" : relOri[0][i].item(),
-                    "y" : relOri[1][i].item(),
-                    "z" : relOri[2][i].item()
-                }
-                for i in range(100)]
+            "uid": "",
+            "elapsedTime": 5000,
+            "sensorData": {
+                "accelerometer": [{
+                    "t": i * 50,
+                    "x": accel[0][i].item(),
+                    "y": accel[1][i].item(),
+                    "z": accel[2][i].item()
+                } for i in range(100)],
+                "gyroscope": [{
+                    "t": i * 50,
+                    "x": gyro[0][i].item(),
+                    "y": gyro[1][i].item(),
+                    "z": gyro[2][i].item()
+                } for i in range(100)],
+                "magnetometer": [{
+                    "t": i * 50,
+                    "x": mag[0][i].item(),
+                    "y": mag[1][i].item(),
+                    "z": mag[2][i].item()
+                } for i in range(100)],
+                "absOrientation": [{
+                    "t": i * 50,
+                    "x": absOri[0][i].item(),
+                    "y": absOri[1][i].item(),
+                    "z": absOri[2][i].item()
+                } for i in range(100)],
+                "relOrientation": [{
+                    "t": i * 50,
+                    "x": relOri[0][i].item(),
+                    "y": relOri[1][i].item(),
+                    "z": relOri[2][i].item()
+                } for i in range(100)]
             }
         }
 
-        with open(f'data/export/{key}_{seed}.json', 'w') as f:
+        # Save generated data to JSON file
+        with open(f'data/export/visual_{key}_{seed}.json', 'w') as f:
             json.dump(fake_data, f, indent=4)
