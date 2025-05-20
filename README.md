@@ -4,8 +4,8 @@ A CDC-GAN (Conditional Deep Convolutional Generative Adversarial Network) model 
 
 ## Directory Structure
 
-- `./`: Contains all needed scripts for the training of the model and subsequent generating of data.
-- `data/`: Includes not processed and preprocessed sample data files used for the simulation.
+- `scripts/`: Contains all needed scripts for the training of the model and subsequent generating of data.
+- `data/`: Includes not processed sample data files used for the simulation.
 - `models/`: Trained CDC-GAN models.
 - `README.md`: This file.
 
@@ -37,9 +37,15 @@ To train the model and generate data, follow these steps:
    ```bash
    python export.py
    ```
-7. **(Optional)** Generate a single sample:
+ **(Optional)**
+ 
+7. Generate a single sample:
    ```bash
    python generate.py
+   ```
+8. Plot a single sample:
+   ```bash
+   python plot.py
    ```
 
 ## References
