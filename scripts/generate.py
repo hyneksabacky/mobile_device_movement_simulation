@@ -14,7 +14,7 @@ activities = {'walk': 0}
 
 # Initialize and load the trained Generator model
 netG = Generator(nz)
-netG.load_state_dict(torch.load('./models/cdc-gan_walk_big_nz.pkl', weights_only=True))
+netG.load_state_dict(torch.load('../models/cdc-gan_walk_big_nz.pkl', weights_only=True))
 netG.eval()
 
 # Generate synthetic data for each activity
@@ -80,5 +80,5 @@ for seed in range(1):
         }
 
         # Save generated data to JSON file
-        with open(f'data/export/visual_{key}_{seed}.json', 'w') as f:
+        with open(f'../data/export/visual_{key}_{seed}.json', 'w') as f:
             json.dump(fake_data, f, indent=4)

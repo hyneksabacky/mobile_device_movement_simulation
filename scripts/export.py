@@ -12,7 +12,7 @@ nd = ND   # Number of data channels
 # Initialize Generator and load trained weights
 netG = Generator(nz).to(device)
 net_name = "cdc-gan_walk_small_nz"
-netG.load_state_dict(torch.load(f'models/{net_name}.pkl', weights_only=True))
+netG.load_state_dict(torch.load(f'../models/{net_name}.pkl', weights_only=True))
 netG.eval()
 
 # Prepare dummy input for ONNX export
@@ -34,4 +34,4 @@ torch.onnx.export(
     }
 )
 
-print("Trained model exported to models/{}.onnx".format(net_name))
+print("Trained model exported to ../models/{}.onnx".format(net_name))

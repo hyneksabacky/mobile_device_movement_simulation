@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 # Paths to data files
 data_path = {
-    0: './data/export/walk_real.json',
-    1: './data/export/visual_walk_6136.json'
+    0: '../data/export/walk_real.json',
+    1: '../data/export/visual_walk_6136.json'
 }
 data_path_index = 0  # Select which data file to use
 

@@ -73,7 +73,7 @@ def json_process(directory_path):
             # Sliding window extraction
             num_rows = df_pivot.shape[0]
             num_splits = (num_rows - 90) // 10
-            with h5py.File('data/preprocessed/test.h5', 'a') as hf:
+            with h5py.File('../data/preprocessed/test.h5', 'a') as hf:
                 for i in range(num_splits):
                     start_row = i * 10
                     if df_pivot.iloc[start_row].isnull().any():
@@ -106,7 +106,7 @@ def h5_process():
     Example function for processing a specific JSON file and saving windows to HDF5.
     Not used in main execution.
     """
-    json_file_path = 'data/raw/mobile-sensor-reading_acce_gyro_magnet.json'
+    json_file_path = '../data/raw/mobile-sensor-reading_acce_gyro_magnet.json'
     print(f"Reading JSON file: {json_file_path}")
     df = pd.read_json(json_file_path)
     print("JSON file read successfully.")
@@ -181,7 +181,7 @@ def h5_process():
 
             activity = current_row['activity']
             tf_array = sensor_window[['acce_x', 'acce_y', 'acce_z', 'gyro_x', 'gyro_y', 'gyro_z']].to_numpy()
-            with h5py.File('data/preprocessed/data_xyz.h5', 'a') as hf:
+            with h5py.File('../data/preprocessed/data_xyz.h5', 'a') as hf:
                 dataset = hf.create_dataset(f'data_{index}_{window_counter}', data=tf_array)
                 dataset.attrs['activity'] = activity
 
@@ -194,5 +194,5 @@ def h5_process():
 
 if __name__ == '__main__':
     # Run JSON processing on the specified directory
-    json_process('data/mstraka/api_data')
+    json_process('../data/mstraka/api_data')
     print(data_dict)

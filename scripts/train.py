@@ -23,7 +23,7 @@ activities = {'walk' : 0}
 def main():
     print("Loading dataset...")
     # Load the dataset
-    trainset = Dataset('./data/preprocessed/marekstraka_xyz.h5', activities)
+    trainset = Dataset('../data/preprocessed/marekstraka_xyz.h5', activities)
 
     # Create DataLoader for batching
     trainloader = torch.utils.data.DataLoader(
@@ -100,7 +100,7 @@ def main():
     epochs = [i / iterations_per_epoch for i in range(num_iterations)]
 
     # Save the trained Generator model
-    torch.save(netG.state_dict(), './models/cdc-gan_walk_big_nz_huge_e.pkl')
+    torch.save(netG.state_dict(), '../models/cdc-gan_walk_big_nz_huge_e.pkl')
 
     # Plot losses
     _, ax1 = plt.subplots(figsize=(10,5))
@@ -135,7 +135,7 @@ def main():
         plt.axvline(x=i, color='gray', linestyle='--', linewidth=0.5)
 
     plt.tight_layout()
-    plt.savefig('./models/losses.png', dpi=300)
+    plt.savefig('../models/losses.png', dpi=300)
     
 if __name__ == '__main__':
     main()
