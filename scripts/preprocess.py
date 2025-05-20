@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from tqdm import tqdm
+import sys
 
 # Dictionaries to store summary statistics
 data_dict = {}
@@ -16,7 +17,7 @@ def remove_extra(data_frame):
         if col in data_frame:
             data_frame.drop(col, axis=1, inplace=True)
 
-def json_process(directory_path):
+def json_process(directory_path, output_file):
     """
     Process all JSON files in a directory, normalize and pivot sensor data,
     and save fixed-length windows to an HDF5 file.
@@ -73,7 +74,7 @@ def json_process(directory_path):
             # Sliding window extraction
             num_rows = df_pivot.shape[0]
             num_splits = (num_rows - 90) // 10
-            with h5py.File('../data/preprocessed/test.h5', 'a') as hf:
+            with h5py.File(output_file, 'a') as hf:
                 for i in range(num_splits):
                     start_row = i * 10
                     if df_pivot.iloc[start_row].isnull().any():
@@ -192,7 +193,24 @@ def h5_process():
         index += 1
         print(f"{index}: {window_counter} windows of {activity} activity extracted.")
 
+def print_help():
+    """
+    Print help message for command line usage.
+    """
+    print("Usage: python preprocess.py [json_dir_path] [output_file]")
+    print("The script will process all JSON files in the specified directory.")
+    print("Example: python preprocess.py ../data/raw/")
+
 if __name__ == '__main__':
-    # Run JSON processing on the specified directory
-    json_process('../data/mstraka/api_data')
-    print(data_dict)
+    if len(sys.argv) == 3:
+        # If a specific file is provided, process that file
+        json_dir_path = sys.argv[1]
+        output_file = sys.argv[2]
+        # Run JSON processing on the specified directory
+        print(f"Processing JSON file: {json_dir_path} to {output_file}")
+        json_process(json_dir_path, output_file)
+        print(data_dict)
+    else:
+        print_help()
+        sys.exit(0)
+    

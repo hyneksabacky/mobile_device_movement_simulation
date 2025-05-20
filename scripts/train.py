@@ -3,24 +3,29 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import sys
 
 from model import Discriminator, Generator, weights_init
 from prepare import Dataset
 
 # Hyperparameters
+activity = 'walk'
 lr = 2e-4
 beta1 = 0.5
 epoch_num = 4096
 batch_size = 128
-nz = 100
 ngpu = 0
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 nd = 15
 
-# Activity label mapping
-activities = {'walk' : 0}
-
 def main():
+    if activity == 'car':
+        activities = {'car' : 0}
+        nz = 10
+    else:
+        activities = {'walk' : 0}
+        nz = 100
+
     print("Loading dataset...")
     # Load the dataset
     trainset = Dataset('../data/preprocessed/marekstraka_xyz.h5', activities)
@@ -100,7 +105,8 @@ def main():
     epochs = [i / iterations_per_epoch for i in range(num_iterations)]
 
     # Save the trained Generator model
-    torch.save(netG.state_dict(), '../models/cdc-gan_walk_big_nz_huge_e.pkl')
+    torch.save(netG.state_dict(), f'../models/cdc-gan_{activity}.pkl')
+    print(f"Trained model saved to ../models/cdc-gan_{activity}.pkl")
 
     # Plot losses
     _, ax1 = plt.subplots(figsize=(10,5))
@@ -137,5 +143,21 @@ def main():
     plt.tight_layout()
     plt.savefig('../models/losses.png', dpi=300)
     
+
+def print_help():
+    print("Usage: python train.py [activity]")
+    print("activities: 'walk' (default), 'car'")
+    sys.exit(0)
+
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'car' or sys.argv[1] == 'walk' and len(sys.argv) == 2:
+            activity = sys.argv[1]
+            print(f"Activity set to: {activity}")
+        else:
+            print("Usage: python train.py [activity]")
+            print("activities: 'walk' (default), 'car'")
+            sys.exit(0)
+    else:
+        print("No activity specified, using default: 'walk'")
     main()

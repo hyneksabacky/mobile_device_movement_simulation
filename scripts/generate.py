@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from model import Generator
 import json
 
+net_name = '../models/cdc-gan_walk_big_nz.pkl'
+
 # Latent vector size and number of data channels
 nz = 100
 nd = 15
@@ -14,7 +16,7 @@ activities = {'walk': 0}
 
 # Initialize and load the trained Generator model
 netG = Generator(nz)
-netG.load_state_dict(torch.load('../models/cdc-gan_walk_big_nz.pkl', weights_only=True))
+netG.load_state_dict(torch.load(net_name, weights_only=True))
 netG.eval()
 
 # Generate synthetic data for each activity
