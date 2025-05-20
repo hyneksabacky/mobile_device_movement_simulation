@@ -1,6 +1,6 @@
 # Mobile Device Movement Simulation
 
-A CDC-GAN (Conditional Deep Convolutional Generative Adversarial Network) model based on [[1]](#1) and [[2]](#2). It is used for training and generating 5 second artificial accelerometer and gyroscope segments.
+A CDC-GAN (Conditional Deep Convolutional Generative Adversarial Network) model based on [[1]](#1) and [[2]](#2). It is used for training and generating 5 second artificial accelerometer, gyroscope, magnetometer, and relative and absolute orientation segments.
 
 ## Directory Structure
 
