@@ -99,9 +99,7 @@ def json_process(directory_path, output_file):
             j += 1
 
     print(length_dict)
-
-            
-            
+        
 def h5_process():
     """
     Example function for processing a specific JSON file and saving windows to HDF5.
@@ -199,7 +197,7 @@ def print_help():
     """
     print("Usage: python preprocess.py [json_dir_path] [output_file]")
     print("The script will process all JSON files in the specified directory.")
-    print("Example: python preprocess.py ../data/raw/")
+    print("Example: python preprocess.py ../data/raw/ output.h5")
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
